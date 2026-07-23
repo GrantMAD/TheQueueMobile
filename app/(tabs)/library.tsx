@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { View, FlatList, StyleSheet, Text, Pressable, ActivityIndicator } from 'react-native';
+import { View, FlatList, StyleSheet, Text, Pressable, RefreshControl } from 'react-native';
 import { router } from 'expo-router';
 import { useLibrary } from '@/hooks/useLibrary';
 import { MediaCard } from '@/components/media/MediaCard';
 import { Colors } from '@/constants/colors';
 import { FontFamily, FontSize } from '@/constants/typography';
+import { Skeleton } from '@/components/ui/Skeleton';
 import { MediaStatus, LibraryEntry } from '@/types';
 import { statusLabel } from '@/lib/utils/formatters';
 
@@ -54,14 +55,28 @@ export default function LibraryTab() {
         />
       </View>
 
-      {isLoading ? (
-        <ActivityIndicator color={Colors.primary} style={styles.loader} />
+      {isLoading && filteredLibrary.length === 0 ? (
+        <View style={styles.skeletonContainer}>
+          {[1, 2, 3, 4].map((n) => (
+            <View key={n} style={styles.skeletonCard}>
+              <Skeleton width={80} height={120} style={{ borderRadius: 8 }} />
+              <View style={styles.skeletonInfo}>
+                <Skeleton width={150} height={20} />
+                <Skeleton width={100} height={14} style={{ marginTop: 8 }} />
+                <Skeleton width={60} height={24} style={{ marginTop: 16, borderRadius: 12 }} />
+              </View>
+            </View>
+          ))}
+        </View>
       ) : (
         <FlatList
           data={filteredLibrary}
           keyExtractor={(item) => item.id}
-          onRefresh={refetch}
-          refreshing={isLoading}
+          refreshControl={<RefreshControl refreshing={isLoading && filteredLibrary.length > 0} onRefresh={refetch} tintColor={Colors.primary} />}
+          removeClippedSubviews={true}
+          initialNumToRender={10}
+          maxToRenderPerBatch={10}
+          windowSize={5}
           renderItem={({ item }) => {
             if (!item.media_item) return null;
             return (
@@ -118,8 +133,21 @@ const styles = StyleSheet.create({
     color: Colors.textInverse,
     fontFamily: FontFamily.bold,
   },
-  loader: {
-    marginTop: 40,
+  skeletonContainer: {
+    padding: 16,
+    gap: 16,
+  },
+  skeletonCard: {
+    flexDirection: 'row',
+    backgroundColor: Colors.surface,
+    borderColor: Colors.surfaceBorder,
+    borderWidth: 1,
+    borderRadius: 12,
+    padding: 12,
+  },
+  skeletonInfo: {
+    marginLeft: 16,
+    flex: 1,
   },
   listContent: {
     padding: 16,

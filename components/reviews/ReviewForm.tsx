@@ -1,5 +1,5 @@
 import React, { forwardRef, useState } from 'react';
-import { View, StyleSheet, Text, Pressable, Switch } from 'react-native';
+import { View, StyleSheet, Text, Pressable, Switch, KeyboardAvoidingView, ScrollView } from 'react-native';
 import { BottomSheet, BottomSheetRef } from '../ui/BottomSheet';
 import { Colors } from '@/constants/colors';
 import { FontFamily, FontSize } from '@/constants/typography';
@@ -38,7 +38,8 @@ export const ReviewForm = forwardRef<BottomSheetRef, ReviewFormProps>(
 
     return (
       <BottomSheet ref={ref} title={isEditing ? 'Edit Review' : 'Write Review'} snapPoints={['65%', '90%']}>
-        <View style={styles.form}>
+        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
+          <ScrollView contentContainerStyle={styles.form} keyboardShouldPersistTaps="handled">
           <Text style={styles.sectionLabel}>Rating: {rating.toFixed(1)} / 10</Text>
           <View style={styles.starRow}>
             {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((star) => (
@@ -86,13 +87,14 @@ export const ReviewForm = forwardRef<BottomSheetRef, ReviewFormProps>(
             />
           </View>
 
-          <Button
-            text={isEditing ? 'Save Changes' : 'Submit Review'}
-            onPress={handleSubmit}
-            disabled={!hookText.trim()}
-            style={styles.submitBtn}
-          />
-        </View>
+            <Button
+              text={isEditing ? 'Save Changes' : 'Submit Review'}
+              onPress={handleSubmit}
+              disabled={!hookText.trim()}
+              style={styles.submitBtn}
+            />
+          </ScrollView>
+        </KeyboardAvoidingView>
       </BottomSheet>
     );
   }
@@ -103,6 +105,7 @@ import { Platform } from 'react-native';
 const styles = StyleSheet.create({
   form: {
     gap: 18,
+    paddingBottom: 24,
   },
   sectionLabel: {
     fontFamily: FontFamily.semiBold,

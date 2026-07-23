@@ -1,10 +1,11 @@
 import React from 'react';
-import { View, StyleSheet, FlatList, ActivityIndicator, Text } from 'react-native';
+import { View, StyleSheet, FlatList, ActivityIndicator, Text, RefreshControl } from 'react-native';
 import { Stack, router } from 'expo-router';
 import { useNotifications } from '@/hooks/useNotifications';
 import { useRealtime } from '@/hooks/useRealtime';
 import { NotificationCard } from '@/components/notifications/NotificationCard';
 import { Button } from '@/components/ui/Button';
+import { Skeleton } from '@/components/ui/Skeleton';
 import { Colors } from '@/constants/colors';
 import { FontFamily, FontSize } from '@/constants/typography';
 import { Notification } from '@/types';
@@ -66,12 +67,27 @@ export default function NotificationsScreen() {
         }} 
       />
 
-      {isLoading ? (
-        <ActivityIndicator color={Colors.primary} style={styles.loader} size="large" />
+      {isLoading && notifications.length === 0 ? (
+        <View style={styles.skeletonContainer}>
+          {[1, 2, 3, 4, 5, 6].map((n) => (
+            <View key={n} style={styles.skeletonCard}>
+              <Skeleton width={44} height={44} style={{ borderRadius: 22 }} />
+              <View style={styles.skeletonInfo}>
+                <Skeleton width={200} height={18} />
+                <Skeleton width={120} height={14} style={{ marginTop: 6 }} />
+              </View>
+            </View>
+          ))}
+        </View>
       ) : (
         <FlatList
           data={notifications}
           keyExtractor={(item) => item.id}
+          refreshControl={<RefreshControl refreshing={isLoading && notifications.length > 0} onRefresh={() => {}} tintColor={Colors.primary} />}
+          removeClippedSubviews={true}
+          initialNumToRender={12}
+          maxToRenderPerBatch={12}
+          windowSize={5}
           renderItem={({ item }) => (
             <NotificationCard 
               notification={item} 
@@ -98,6 +114,23 @@ const styles = StyleSheet.create({
   },
   loader: {
     marginTop: 40,
+  },
+  skeletonContainer: {
+    padding: 16,
+    gap: 16,
+  },
+  skeletonCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.surface,
+    borderColor: Colors.surfaceBorder,
+    borderWidth: 1,
+    borderRadius: 12,
+    padding: 16,
+  },
+  skeletonInfo: {
+    marginLeft: 14,
+    flex: 1,
   },
   listContent: {
     paddingBottom: 24,

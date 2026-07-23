@@ -1,5 +1,5 @@
 import React from 'react';
-import { FlatList, StyleSheet, Text, View, ActivityIndicator } from 'react-native';
+import { FlatList, StyleSheet, Text, View, ActivityIndicator, RefreshControl } from 'react-native';
 import { FeedActivity } from '@/types';
 import { ActivityCard } from './ActivityCard';
 import { Skeleton } from '../ui/Skeleton';
@@ -48,8 +48,13 @@ export function ActivityFeed({
       data={activities}
       keyExtractor={(item, index) => `${item.occurred_at}_${index}`}
       renderItem={({ item }) => <ActivityCard activity={item} />}
-      onRefresh={onRefresh}
-      refreshing={isRefreshing}
+      onRefresh={undefined}
+      refreshing={undefined}
+      refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} tintColor={Colors.primary} />}
+      removeClippedSubviews={true}
+      initialNumToRender={10}
+      maxToRenderPerBatch={10}
+      windowSize={5}
       onEndReached={onEndReached}
       onEndReachedThreshold={0.3}
       ListFooterComponent={

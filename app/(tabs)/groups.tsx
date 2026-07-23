@@ -1,25 +1,41 @@
 import React from 'react';
-import { View, FlatList, StyleSheet, Text, ActivityIndicator, Pressable } from 'react-native';
+import { View, FlatList, StyleSheet, Text, Pressable, RefreshControl } from 'react-native';
 import { router } from 'expo-router';
 import { useGroups } from '@/hooks/useGroups';
 import { GroupCard } from '@/components/groups/GroupCard';
 import { Button } from '@/components/ui/Button';
 import { Colors } from '@/constants/colors';
 import { FontFamily, FontSize } from '@/constants/typography';
+import { Skeleton } from '@/components/ui/Skeleton';
 
 export default function GroupsTab() {
   const { groups, isLoading, refetch } = useGroups();
 
   return (
     <View style={styles.container}>
-      {isLoading ? (
-        <ActivityIndicator color={Colors.primary} style={styles.loader} />
+      {isLoading && groups.length === 0 ? (
+        <View style={styles.skeletonContainer}>
+          {[1, 2, 3].map((n) => (
+            <View key={n} style={styles.skeletonCard}>
+              <View style={styles.skeletonHeader}>
+                <Skeleton width={48} height={48} style={{ borderRadius: 12 }} />
+                <View style={styles.skeletonInfo}>
+                  <Skeleton width={150} height={20} />
+                  <Skeleton width={100} height={14} style={{ marginTop: 8 }} />
+                </View>
+              </View>
+            </View>
+          ))}
+        </View>
       ) : (
         <FlatList
           data={groups}
           keyExtractor={(item) => item.id}
-          onRefresh={refetch}
-          refreshing={isLoading}
+          refreshControl={<RefreshControl refreshing={isLoading && groups.length > 0} onRefresh={refetch} tintColor={Colors.primary} />}
+          removeClippedSubviews={true}
+          initialNumToRender={8}
+          maxToRenderPerBatch={8}
+          windowSize={5}
           renderItem={({ item }) => (
             <GroupCard
               group={item}
@@ -56,8 +72,23 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.background,
   },
-  loader: {
-    marginTop: 40,
+  skeletonContainer: {
+    padding: 16,
+    gap: 12,
+  },
+  skeletonCard: {
+    backgroundColor: Colors.surface,
+    borderColor: Colors.surfaceBorder,
+    borderWidth: 1,
+    borderRadius: 16,
+    padding: 16,
+  },
+  skeletonHeader: {
+    flexDirection: 'row',
+  },
+  skeletonInfo: {
+    marginLeft: 16,
+    flex: 1,
   },
   header: {
     marginBottom: 16,

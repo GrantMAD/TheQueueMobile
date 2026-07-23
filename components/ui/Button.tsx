@@ -1,6 +1,9 @@
 import React from 'react';
-import { Pressable, Text, StyleSheet, ActivityIndicator, ViewStyle, TextStyle } from 'react-native';
+import { Pressable, Text, StyleSheet, ActivityIndicator, ViewStyle, TextStyle, Platform } from 'react-native';
 import * as Haptics from 'expo-haptics';
+import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
+
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 import { Colors } from '@/constants/colors';
 import { FontFamily, FontSize } from '@/constants/typography';
 
@@ -25,6 +28,22 @@ export function Button({
   style,
   textStyle,
 }: ButtonProps) {
+  const scale = useSharedValue(1);
+
+  const handlePressIn = () => {
+    if (disabled || loading) return;
+    scale.value = withSpring(0.96, { damping: 15, stiffness: 300 });
+  };
+
+  const handlePressOut = () => {
+    if (disabled || loading) return;
+    scale.value = withSpring(1, { damping: 15, stiffness: 300 });
+  };
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
+
   const handlePress = () => {
     if (loading || disabled) return;
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -47,12 +66,17 @@ export function Button({
   ];
 
   return (
-    <Pressable
+    <AnimatedPressable
+      accessibilityRole="button"
+      android_ripple={{ color: 'rgba(255,255,255,0.1)', borderless: false }}
       onPress={handlePress}
+      onPressIn={handlePressIn}
+      onPressOut={handlePressOut}
       disabled={disabled || loading}
-      style={({ pressed }) => [
+      style={[
         buttonStyles,
-        pressed && !disabled && !loading && styles.pressed,
+        animatedStyle,
+        (disabled || loading) ? styles.disabled : null,
       ] as any}
     >
       {loading ? (
@@ -63,7 +87,7 @@ export function Button({
       ) : (
         <Text style={textStyles as any}>{text}</Text>
       )}
-    </Pressable>
+    </AnimatedPressable>
   );
 }
 
@@ -73,10 +97,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderRadius: 12,
     flexDirection: 'row',
-  },
-  pressed: {
-    opacity: 0.85,
-    transform: [{ scale: 0.98 }],
   },
   disabled: {
     opacity: 0.5,
