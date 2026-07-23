@@ -1,14 +1,15 @@
 import React, { useEffect, useRef } from 'react';
-import { View, StyleSheet, Animated } from 'react-native';
+import { View, StyleSheet, Animated, ViewStyle } from 'react-native';
 import { Colors } from '@/constants/colors';
 
 interface SkeletonProps {
   width?: number | string;
   height?: number | string;
   variant?: 'rect' | 'circle';
+  style?: ViewStyle;
 }
 
-export function Skeleton({ width = '100%', height = 20, variant = 'rect' }: SkeletonProps) {
+export function Skeleton({ width = '100%', height = 20, variant = 'rect', style }: SkeletonProps) {
   const shimmerAnim = useRef(new Animated.Value(0.3)).current;
 
   useEffect(() => {
@@ -28,13 +29,14 @@ export function Skeleton({ width = '100%', height = 20, variant = 'rect' }: Skel
     ).start();
   }, [shimmerAnim]);
 
-  const style = [
+  const combinedStyle = [
     styles.skeleton,
     variant === 'circle' ? styles.circle : null,
     { width, height, opacity: shimmerAnim },
+    style,
   ];
 
-  return <Animated.View style={style as any} />;
+  return <Animated.View style={combinedStyle as any} />;
 }
 
 const styles = StyleSheet.create({
