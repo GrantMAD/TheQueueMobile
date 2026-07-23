@@ -52,6 +52,13 @@ export default function ProfileTab() {
       </Card>
 
       <Button
+        text="Edit Profile"
+        variant="secondary"
+        onPress={() => router.push('/profile/settings')}
+        style={styles.editBtn}
+      />
+
+      <Button
         text="Sign Out"
         variant="destructive"
         onPress={handleSignOut}
@@ -129,6 +136,10 @@ const styles = StyleSheet.create({
     fontSize: FontSize.xs,
     color: Colors.textSecondary,
     marginTop: 2,
+  },
+  editBtn: {
+    marginTop: 20,
+    marginBottom: 10,
   },
   signOutBtn: {
     marginTop: 10,
