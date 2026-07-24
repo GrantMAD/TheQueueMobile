@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useFeed } from '@/hooks/useFeed';
 import { ActivityFeed } from '@/components/feed/ActivityFeed';
 import { Colors } from '@/constants/colors';
@@ -34,7 +35,10 @@ export default function FeedTab() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>Your Feed</Text>
+        <View style={styles.titleRow}>
+          <Ionicons name="albums-outline" size={28} color={Colors.textPrimary} style={styles.titleIcon} />
+          <Text style={styles.title}>Your Feed</Text>
+        </View>
         <Text style={styles.description}>
           See what your friends are watching and reviewing.
         </Text>
@@ -61,11 +65,18 @@ const styles = StyleSheet.create({
     paddingTop: 16,
     paddingBottom: 8,
   },
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  titleIcon: {
+    marginRight: 8,
+  },
   title: {
     fontFamily: FontFamily.bold,
     fontSize: FontSize['2xl'],
     color: Colors.textPrimary,
-    marginBottom: 4,
   },
   description: {
     fontFamily: FontFamily.regular,

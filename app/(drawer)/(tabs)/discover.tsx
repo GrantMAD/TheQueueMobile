@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, FlatList, Text, ActivityIndicator } from 'react-native';
 import { router } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import { useGroups } from '@/hooks/useGroups';
 import { supabase } from '@/lib/supabase/client';
 import { Group, MediaItem } from '@/types';
@@ -86,6 +87,7 @@ export default function DiscoverTab() {
 
   return (
     <FlatList
+      style={styles.list}
       data={publicGroups}
       keyExtractor={(item) => item.id}
       renderItem={({ item }) => (
@@ -100,6 +102,15 @@ export default function DiscoverTab() {
       )}
       ListHeaderComponent={
         <View style={styles.header}>
+          <View style={styles.headerTextContainer}>
+            <View style={styles.titleRow}>
+              <Ionicons name="compass-outline" size={28} color={Colors.textPrimary} style={styles.titleIcon} />
+              <Text style={styles.pageTitle}>Discover</Text>
+            </View>
+            <Text style={styles.pageDescription}>
+              Find new media and join public crews.
+            </Text>
+          </View>
           <Input
             placeholder="Search public crews..."
             value={searchQuery}
@@ -113,12 +124,20 @@ export default function DiscoverTab() {
           ) : (
             <MediaRow
               title="Trending Picks"
+              icon={<Ionicons name="trending-up-outline" size={20} color={Colors.textPrimary} />}
+              description="See what's popular across all crews."
               items={trendingMedia}
               onItemPress={(item) => router.push(`/media/${item.external_id}`)}
             />
           )}
 
-          <Text style={styles.sectionTitle}>Public Groups</Text>
+          <View style={styles.sectionHeader}>
+            <View style={styles.titleRow}>
+              <Ionicons name="people-outline" size={20} color={Colors.textPrimary} style={styles.titleIcon} />
+              <Text style={styles.sectionTitle}>Public Groups</Text>
+            </View>
+            <Text style={styles.sectionDescription}>Join open crews and start sharing.</Text>
+          </View>
         </View>
       }
       ListEmptyComponent={
@@ -134,12 +153,37 @@ export default function DiscoverTab() {
 }
 
 const styles = StyleSheet.create({
-  container: {
+  list: {
+    flex: 1,
     backgroundColor: Colors.background,
+  },
+  container: {
     paddingBottom: 32,
   },
   header: {
-    paddingTop: 12,
+    paddingTop: 16,
+  },
+  headerTextContainer: {
+    paddingHorizontal: 16,
+    marginBottom: 16,
+  },
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  titleIcon: {
+    marginRight: 8,
+  },
+  pageTitle: {
+    fontFamily: FontFamily.bold,
+    fontSize: FontSize['2xl'],
+    color: Colors.textPrimary,
+  },
+  pageDescription: {
+    fontFamily: FontFamily.regular,
+    fontSize: FontSize.md,
+    color: Colors.textSecondary,
   },
   searchBar: {
     marginHorizontal: 16,
@@ -148,13 +192,21 @@ const styles = StyleSheet.create({
   loader: {
     marginVertical: 20,
   },
+  sectionHeader: {
+    marginTop: 20,
+    marginBottom: 10,
+    paddingHorizontal: 16,
+  },
   sectionTitle: {
     fontFamily: FontFamily.bold,
     fontSize: FontSize.lg,
     color: Colors.textPrimary,
-    marginHorizontal: 16,
-    marginTop: 20,
-    marginBottom: 10,
+  },
+  sectionDescription: {
+    fontFamily: FontFamily.regular,
+    fontSize: FontSize.sm,
+    color: Colors.textSecondary,
+    marginBottom: 8,
   },
   groupCardWrapper: {
     paddingHorizontal: 16,

@@ -7,16 +7,22 @@ import { FontFamily, FontSize } from '@/constants/typography';
 
 interface MediaRowProps {
   title: string;
+  icon?: React.ReactNode;
+  description?: string;
   items: MediaItem[];
   onItemPress: (item: MediaItem) => void;
 }
 
-export function MediaRow({ title, items, onItemPress }: MediaRowProps) {
+export function MediaRow({ title, icon, description, items, onItemPress }: MediaRowProps) {
   if (items.length === 0) return null;
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>{title}</Text>
+      <View style={styles.titleContainer}>
+        {icon && <View style={styles.iconContainer}>{icon}</View>}
+        <Text style={styles.title}>{title}</Text>
+      </View>
+      {description && <Text style={styles.description}>{description}</Text>}
       <FlatList
         data={items}
         horizontal
@@ -37,10 +43,24 @@ const styles = StyleSheet.create({
   container: {
     marginVertical: 12,
   },
+  titleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginHorizontal: 16,
+    marginBottom: 4,
+  },
+  iconContainer: {
+    marginRight: 8,
+  },
   title: {
     fontFamily: FontFamily.bold,
     fontSize: FontSize.lg,
     color: Colors.textPrimary,
+  },
+  description: {
+    fontFamily: FontFamily.regular,
+    fontSize: FontSize.sm,
+    color: Colors.textSecondary,
     marginHorizontal: 16,
     marginBottom: 8,
   },

@@ -146,7 +146,13 @@ export default function SettingsScreen() {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <Text style={styles.pageTitle}>Settings</Text>
+      <View style={styles.headerTextContainer}>
+        <View style={styles.titleRow}>
+          <Ionicons name="settings-outline" size={32} color={Colors.textPrimary} style={styles.titleIcon} />
+          <Text style={styles.pageTitle}>Settings</Text>
+        </View>
+        <Text style={styles.pageDescription}>Manage your account preferences and app settings.</Text>
+      </View>
       
       {/* Profile Settings */}
       <Card style={styles.card}>
@@ -249,11 +255,26 @@ const styles = StyleSheet.create({
     padding: 20,
     paddingBottom: 40,
   },
+  headerTextContainer: {
+    marginBottom: 24,
+  },
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  titleIcon: {
+    marginRight: 10,
+  },
   pageTitle: {
     fontFamily: FontFamily.bold,
     fontSize: FontSize['3xl'],
     color: Colors.textPrimary,
-    marginBottom: 24,
+  },
+  pageDescription: {
+    fontFamily: FontFamily.regular,
+    fontSize: FontSize.md,
+    color: Colors.textSecondary,
   },
   card: {
     marginBottom: 20,

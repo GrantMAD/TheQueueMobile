@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, FlatList, StyleSheet, Text, Pressable, RefreshControl } from 'react-native';
+import { View, FlatList, StyleSheet, Text, Pressable, RefreshControl, SafeAreaView } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useGroups } from '@/hooks/useGroups';
 import { GroupCard } from '@/components/groups/GroupCard';
@@ -45,13 +46,11 @@ export default function GroupsTab() {
           )}
           ListHeaderComponent={
             <View style={styles.header}>
-              <Button
-                text="Create New Crew"
-                variant="primary"
-                onPress={() => router.push('/groups/create')}
-                style={styles.createBtn}
-              />
-              <Text style={styles.sectionTitle}>Your Groups ({groups.length})</Text>
+              <View style={styles.titleRow}>
+                <Ionicons name="people-circle-outline" size={28} color={Colors.textPrimary} style={styles.titleIcon} />
+                <Text style={styles.sectionTitle}>Your Groups ({groups.length})</Text>
+              </View>
+              <Text style={styles.description}>Manage your crews and see what everyone is up to.</Text>
             </View>
           }
           ListEmptyComponent={
@@ -63,6 +62,13 @@ export default function GroupsTab() {
           contentContainerStyle={styles.listContent}
         />
       )}
+      <View style={styles.bottomContainer}>
+        <Button
+          text="Create New Crew"
+          variant="primary"
+          onPress={() => router.push('/groups/create')}
+        />
+      </View>
     </View>
   );
 }
@@ -92,15 +98,25 @@ const styles = StyleSheet.create({
   },
   header: {
     marginBottom: 16,
+    paddingTop: 8,
   },
-  createBtn: {
-    marginVertical: 10,
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  titleIcon: {
+    marginRight: 8,
   },
   sectionTitle: {
     fontFamily: FontFamily.bold,
-    fontSize: FontSize.lg,
+    fontSize: FontSize['2xl'],
     color: Colors.textPrimary,
-    marginTop: 10,
+  },
+  description: {
+    fontFamily: FontFamily.regular,
+    fontSize: FontSize.md,
+    color: Colors.textSecondary,
   },
   listContent: {
     padding: 16,
@@ -122,5 +138,12 @@ const styles = StyleSheet.create({
     fontSize: FontSize.sm,
     color: Colors.textSecondary,
     textAlign: 'center',
+  },
+  bottomContainer: {
+    padding: 16,
+    paddingBottom: 24,
+    backgroundColor: Colors.background,
+    borderTopWidth: 1,
+    borderTopColor: Colors.surfaceBorder,
   },
 });
