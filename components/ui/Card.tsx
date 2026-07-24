@@ -1,5 +1,5 @@
 import React, { useRef } from 'react';
-import { View, StyleSheet, Pressable, Animated, ViewStyle } from 'react-native';
+import { View, StyleSheet, Pressable, Animated, ViewStyle, Platform } from 'react-native';
 import { Colors } from '@/constants/colors';
 
 interface CardProps {
@@ -61,10 +61,15 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: Colors.surfaceBorder,
     padding: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 3,
+    ...Platform.select({
+      web: { boxShadow: '0px 2px 4px rgba(0,0,0,0.2)' },
+      default: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.2,
+        shadowRadius: 4,
+        elevation: 3,
+      },
+    }),
   },
 });

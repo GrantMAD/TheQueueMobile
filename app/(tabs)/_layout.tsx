@@ -2,12 +2,20 @@ import React from 'react';
 import { Tabs } from 'expo-router';
 import { Colors } from '@/constants/colors';
 import { FontFamily, FontSize } from '@/constants/typography';
-// Simple SVG/Icon wrapper using View as a mock for tabs layout configuration
-import { View, StyleSheet, ColorValue } from 'react-native';
+import { Platform, ColorValue } from 'react-native';
+import Ionicons from '@expo/vector-icons/Ionicons';
 
-const TabBarIcon = ({ color, focused }: { color: ColorValue; focused: boolean }) => (
-  <View style={[styles.dot, { backgroundColor: color }, focused && styles.dotActive]} />
-);
+type IoniconsName = React.ComponentProps<typeof Ionicons>['name'];
+
+function TabBarIcon({
+  name,
+  color,
+}: {
+  name: IoniconsName;
+  color: ColorValue;
+}) {
+  return <Ionicons name={name} size={24} color={color as string} />;
+}
 
 export default function TabsLayout() {
   return (
@@ -18,17 +26,21 @@ export default function TabsLayout() {
         tabBarStyle: {
           backgroundColor: Colors.surface,
           borderTopColor: Colors.surfaceBorder,
-          height: 64,
-          paddingBottom: 8,
+          height: 80,
+          paddingBottom: 18,
           paddingTop: 8,
         },
         tabBarLabelStyle: {
           fontFamily: FontFamily.medium,
           fontSize: FontSize.xs,
+          marginTop: 2,
         },
         headerStyle: {
           backgroundColor: Colors.background,
-          shadowColor: 'transparent',
+          ...Platform.select({
+            web: { boxShadow: 'none' },
+            default: { shadowColor: 'transparent' },
+          }),
           borderBottomWidth: 1,
           borderBottomColor: Colors.surfaceBorder,
         },
@@ -43,50 +55,47 @@ export default function TabsLayout() {
         name="index"
         options={{
           title: 'Feed',
-          tabBarIcon: (props) => <TabBarIcon {...props} />,
+          tabBarIcon: ({ color, focused }) => (
+            <TabBarIcon name={focused ? 'home' : 'home-outline'} color={color} />
+          ),
         }}
       />
       <Tabs.Screen
         name="discover"
         options={{
           title: 'Discover',
-          tabBarIcon: (props) => <TabBarIcon {...props} />,
+          tabBarIcon: ({ color, focused }) => (
+            <TabBarIcon name={focused ? 'compass' : 'compass-outline'} color={color} />
+          ),
         }}
       />
       <Tabs.Screen
         name="library"
         options={{
           title: 'Library',
-          tabBarIcon: (props) => <TabBarIcon {...props} />,
+          tabBarIcon: ({ color, focused }) => (
+            <TabBarIcon name={focused ? 'library' : 'library-outline'} color={color} />
+          ),
         }}
       />
       <Tabs.Screen
         name="groups"
         options={{
           title: 'Groups',
-          tabBarIcon: (props) => <TabBarIcon {...props} />,
+          tabBarIcon: ({ color, focused }) => (
+            <TabBarIcon name={focused ? 'people' : 'people-outline'} color={color} />
+          ),
         }}
       />
       <Tabs.Screen
         name="profile"
         options={{
           title: 'Profile',
-          tabBarIcon: (props) => <TabBarIcon {...props} />,
+          tabBarIcon: ({ color, focused }) => (
+            <TabBarIcon name={focused ? 'person' : 'person-outline'} color={color} />
+          ),
         }}
       />
     </Tabs>
   );
 }
-
-const styles = StyleSheet.create({
-  dot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-  },
-  dotActive: {
-    width: 12,
-    height: 6,
-    borderRadius: 3,
-  },
-});

@@ -85,11 +85,6 @@ export default function RootLayout() {
           <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: Colors.background } }}>
             <Stack.Screen name="(auth)" />
             <Stack.Screen name="(tabs)" />
-            <Stack.Screen name="groups" />
-            <Stack.Screen name="media" />
-            <Stack.Screen name="profile" />
-            <Stack.Screen name="search" />
-            <Stack.Screen name="notifications" />
           </Stack>
         </QueryClientProvider>
       </SafeAreaProvider>
