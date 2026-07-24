@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { Stack } from 'expo-router'
+import { Stack, useRouter, useSegments } from 'expo-router'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
@@ -29,7 +29,9 @@ const queryClient = new QueryClient({
 })
 
 export default function RootLayout() {
-  const { setSession, setProfile, setInitialized } = useAuthStore()
+  const { setSession, setProfile, setInitialized, session, isInitialized } = useAuthStore()
+  const segments = useSegments()
+  const router = useRouter()
 
   const [fontsLoaded] = useFonts({
     'Inter-Regular': Inter_400Regular,
@@ -77,6 +79,21 @@ export default function RootLayout() {
     return () => subscription.unsubscribe()
   }, [setSession, setProfile, setInitialized])
 
+  // Protected routing logic
+  useEffect(() => {
+    if (!isInitialized || !fontsLoaded) return
+
+    const inAuthGroup = segments[0] === '(auth)'
+
+    if (!session && !inAuthGroup) {
+      // Redirect unauthenticated users to the welcome screen
+      router.replace('/(auth)/welcome')
+    } else if (session && inAuthGroup) {
+      // Redirect authenticated users to the main tabs
+      router.replace('/(drawer)/(tabs)')
+    }
+  }, [session, isInitialized, fontsLoaded, segments])
+
   return (
     <GestureHandlerRootView style={{ flex: 1, backgroundColor: Colors.background }}>
       <SafeAreaProvider>
@@ -84,7 +101,7 @@ export default function RootLayout() {
           <StatusBar style="light" />
           <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: Colors.background } }}>
             <Stack.Screen name="(auth)" />
-            <Stack.Screen name="(tabs)" />
+            <Stack.Screen name="(drawer)" />
           </Stack>
         </QueryClientProvider>
       </SafeAreaProvider>

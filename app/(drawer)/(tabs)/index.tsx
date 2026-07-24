@@ -33,6 +33,12 @@ export default function FeedTab() {
 
   return (
     <View style={styles.container}>
+      <View style={styles.header}>
+        <Text style={styles.title}>Your Feed</Text>
+        <Text style={styles.description}>
+          See what your friends are watching and reviewing.
+        </Text>
+      </View>
       <ActivityFeed
         activities={activities}
         isLoading={isLoading}
@@ -49,5 +55,21 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.background,
+  },
+  header: {
+    paddingHorizontal: 20,
+    paddingTop: 16,
+    paddingBottom: 8,
+  },
+  title: {
+    fontFamily: FontFamily.bold,
+    fontSize: FontSize['2xl'],
+    color: Colors.textPrimary,
+    marginBottom: 4,
+  },
+  description: {
+    fontFamily: FontFamily.regular,
+    fontSize: FontSize.md,
+    color: Colors.textSecondary,
   },
 });

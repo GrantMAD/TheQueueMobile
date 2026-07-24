@@ -2,7 +2,7 @@ import React from 'react';
 import { Tabs } from 'expo-router';
 import { Colors } from '@/constants/colors';
 import { FontFamily, FontSize } from '@/constants/typography';
-import { Platform, ColorValue } from 'react-native';
+import { Platform, ColorValue, Pressable } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 
 type IoniconsName = React.ComponentProps<typeof Ionicons>['name'];
@@ -20,7 +20,12 @@ function TabBarIcon({
 export default function TabsLayout() {
   return (
     <Tabs
-      screenOptions={{
+      screenOptions={({ navigation }: any) => ({
+        headerLeft: () => (
+          <Pressable onPress={() => navigation.openDrawer()} style={{ marginLeft: 16 }}>
+            <Ionicons name="menu-outline" size={28} color={Colors.textPrimary} />
+          </Pressable>
+        ),
         tabBarActiveTintColor: Colors.primary,
         tabBarInactiveTintColor: Colors.textMuted,
         tabBarStyle: {
@@ -49,7 +54,7 @@ export default function TabsLayout() {
           fontSize: FontSize.lg,
           color: Colors.textPrimary,
         },
-      }}
+      })}
     >
       <Tabs.Screen
         name="index"
@@ -84,15 +89,6 @@ export default function TabsLayout() {
           title: 'Groups',
           tabBarIcon: ({ color, focused }) => (
             <TabBarIcon name={focused ? 'people' : 'people-outline'} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="profile"
-        options={{
-          title: 'Profile',
-          tabBarIcon: ({ color, focused }) => (
-            <TabBarIcon name={focused ? 'person' : 'person-outline'} color={color} />
           ),
         }}
       />
