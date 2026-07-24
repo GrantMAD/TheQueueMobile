@@ -11,10 +11,10 @@ export default function WelcomeScreen() {
       <View style={styles.content}>
         <View style={styles.logoContainer}>
           <Image
-            source={require('@/assets/images/logo.png')}
+            source={require('@/assets/icon.png')}
             style={styles.logo}
             resizeMode="contain"
-            defaultSource={require('@/assets/images/logo.png')}
+            defaultSource={require('@/assets/icon.png')}
           />
           <Text style={styles.appName}>The Queue</Text>
           <Text style={styles.tagline}>Your watch list, your crew</Text>
@@ -25,13 +25,13 @@ export default function WelcomeScreen() {
         <Button
           text="Get Started"
           variant="primary"
-          onPress={() => router.push('/register')}
+          onPress={() => router.push('/register' as any)}
           style={styles.button}
         />
         <Button
           text="Log In"
           variant="secondary"
-          onPress={() => router.push('/login')}
+          onPress={() => router.push('/login' as any)}
           style={styles.button}
         />
       </View>
