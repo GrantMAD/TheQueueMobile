@@ -1,117 +1,174 @@
-import React, { useState, useMemo } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
+import React, { useMemo, useEffect, useState } from 'react';
+import { View, StyleSheet, ScrollView, Text, Pressable } from 'react-native';
+import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { useLibrary } from '@/hooks/useLibrary';
+import { useGroups } from '@/hooks/useGroups';
 import { useFeed } from '@/hooks/useFeed';
-import { ActivityFeed } from '@/components/feed/ActivityFeed';
+import { supabase } from '@/lib/supabase/client';
+import { MediaCard } from '@/components/media/MediaCard';
+import { ActivityCard } from '@/components/feed/ActivityCard';
+import { Skeleton } from '@/components/ui/Skeleton';
 import { Colors } from '@/constants/colors';
 import { FontFamily, FontSize } from '@/constants/typography';
-import { useRealtime } from '@/hooks/useRealtime';
-import { FeedActivity } from '@/types';
+import { VotingRound } from '@/types';
 
-type FilterKey = 'all' | 'reviews' | 'status';
+export default function DashboardScreen() {
+  const { library, isLoading: libraryLoading } = useLibrary();
+  const { groups, isLoading: groupsLoading } = useGroups();
+  const { data: feedPages, isLoading: feedLoading } = useFeed();
 
-const FILTERS: { key: FilterKey; label: string; icon: keyof typeof Ionicons.glyphMap }[] = [
-  { key: 'all',     label: 'All',            icon: 'apps-outline' },
-  { key: 'reviews', label: 'Reviews',         icon: 'star-outline' },
-  { key: 'status',  label: 'Status Updates',  icon: 'pulse-outline' },
-];
+  const [activeVotes, setActiveVotes] = useState<(VotingRound & { groups: any })[]>([]);
+  const [votesLoading, setVotesLoading] = useState(false);
 
-export default function FeedTab() {
-  const [activeFilter, setActiveFilter] = useState<FilterKey>('all');
+  const groupIds = useMemo(() => groups.map((g) => g.id), [groups]);
 
-  const {
-    data,
-    isLoading,
-    refetch,
-    isRefetching,
-    fetchNextPage,
-    isFetchingNextPage,
-  } = useFeed();
-
-  // Realtime sync for feed changes
-  useRealtime({
-    channelName: 'feed-updates-reviews',
-    tableName: 'reviews',
-    queryKeyToInvalidate: ['friend-feed'],
-  });
-
-  useRealtime({
-    channelName: 'feed-updates-media',
-    tableName: 'user_media',
-    queryKeyToInvalidate: ['friend-feed'],
-  });
-
-  const allActivities: FeedActivity[] = data?.pages.flatMap((page) => page) ?? [];
-
-  const activities = useMemo(() => {
-    if (activeFilter === 'reviews') {
-      return allActivities.filter((a) => a.activity_type === 'review');
+  useEffect(() => {
+    async function fetchActiveVotes() {
+      if (groupIds.length === 0) {
+        setActiveVotes([]);
+        return;
+      }
+      setVotesLoading(true);
+      try {
+        const { data, error } = await supabase
+          .from('voting_rounds')
+          .select('*, groups(name)')
+          .in('group_id', groupIds)
+          .eq('status', 'active');
+        if (!error && data) {
+          setActiveVotes(data as any);
+        }
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setVotesLoading(false);
+      }
     }
-    if (activeFilter === 'status') {
-      return allActivities.filter((a) => a.activity_type === 'status_update');
-    }
-    return allActivities;
-  }, [allActivities, activeFilter]);
+    fetchActiveVotes();
+  }, [groupIds]);
+
+  const continueItems = useMemo(() => {
+    return library.filter((item) => item.status === 'current').slice(0, 5);
+  }, [library]);
+
+  const recentFeed = feedPages?.pages?.[0]?.slice(0, 5) || [];
+
+  const SectionHeader = ({ title, subtitle, icon }: { title: string; subtitle: string; icon: any }) => (
+    <View style={styles.sectionHeader}>
+      <View style={styles.sectionTitleRow}>
+        <Ionicons name={icon} size={24} color={Colors.primary} style={styles.sectionIcon} />
+        <Text style={styles.sectionTitle}>{title}</Text>
+      </View>
+      <Text style={styles.sectionSubtitle}>{subtitle}</Text>
+    </View>
+  );
 
   return (
-    <View style={styles.container}>
-      {/* ── Header ──────────────────────────────────── */}
-      <View style={styles.header}>
-        <View style={styles.titleRow}>
-          <View style={styles.titleLeft}>
-            <View style={styles.iconContainer}>
-              <Ionicons name="albums" size={18} color={Colors.primary} />
-            </View>
-            <Text style={styles.title}>Your Feed</Text>
-          </View>
-        </View>
-
-        {/* Filter chips */}
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.filterRow}
-        >
-          {FILTERS.map((f) => {
-            const isActive = activeFilter === f.key;
-            return (
-              <Pressable
-                key={f.key}
-                onPress={() => setActiveFilter(f.key)}
-                style={[
-                  styles.filterChip,
-                  isActive && styles.filterChipActive,
-                ]}
-              >
-                <Ionicons
-                  name={f.icon}
-                  size={13}
-                  color={isActive ? Colors.primary : Colors.textMuted}
-                />
-                <Text
-                  style={[
-                    styles.filterChipText,
-                    isActive && styles.filterChipTextActive,
-                  ]}
-                >
-                  {f.label}
-                </Text>
-              </Pressable>
-            );
-          })}
-        </ScrollView>
+    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+      <View style={styles.hero}>
+        <Text style={styles.heroTitle}>Your Queue</Text>
+        <Text style={styles.heroSubtitle}>
+          Your personal hub for tracking everything you watch, read, and listen to — and sharing it with the people who matter.
+        </Text>
       </View>
 
-      {/* ── Feed ────────────────────────────────────── */}
-      <ActivityFeed
-        activities={activities}
-        isLoading={isLoading}
-        onRefresh={refetch}
-        isRefreshing={isRefetching}
-        onEndReached={fetchNextPage}
-        isFetchingNextPage={isFetchingNextPage}
-      />
-    </View>
+      <View style={styles.section}>
+        <SectionHeader 
+          title="Continue Where You Left Off" 
+          subtitle="Pick up right where you stopped."
+          icon="time-outline" 
+        />
+        {libraryLoading ? (
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.horizontalScroll}>
+            {[1, 2, 3].map((n) => (
+              <Skeleton key={n} width={120} height={180} style={{ borderRadius: 12, marginRight: 12 }} />
+            ))}
+          </ScrollView>
+        ) : continueItems.length > 0 ? (
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.horizontalScroll}>
+            {continueItems.map((item) => (
+              <View key={item.id} style={styles.horizontalCard}>
+                <MediaCard 
+                  item={item.media_item!} 
+                  status={item.status} 
+                  onPress={() => router.push(`/media/${item.media_item?.external_id}`)}
+                />
+              </View>
+            ))}
+          </ScrollView>
+        ) : (
+          <View style={styles.emptyCard}>
+            <Text style={styles.emptyText}>You aren't currently tracking any active media.</Text>
+          </View>
+        )}
+      </View>
+
+      <View style={styles.section}>
+        <SectionHeader 
+          title="Active Votes in Your Groups" 
+          subtitle="Help your crew decide what to watch or read next."
+          icon="stats-chart-outline" 
+        />
+        {groupsLoading || votesLoading ? (
+          <Skeleton width="100%" height={100} style={{ borderRadius: 12 }} />
+        ) : activeVotes.length > 0 ? (
+          activeVotes.map((vote) => (
+            <Pressable 
+              key={vote.id} 
+              style={styles.voteCard} 
+              onPress={() => router.push(`/groups/${vote.group_id}`)}
+            >
+              <View style={styles.voteCardContent}>
+                <View style={styles.voteIconBg}>
+                  <Ionicons name="stats-chart" size={24} color={Colors.primary} />
+                </View>
+                <View style={styles.voteCardInfo}>
+                  <Text style={styles.voteCardTitle}>Active round</Text>
+                  <Text style={styles.voteCardGroup}>{vote.groups?.name}</Text>
+                </View>
+                <View style={styles.voteBadge}>
+                  <Text style={styles.voteBadgeText}>Vote Now</Text>
+                </View>
+              </View>
+            </Pressable>
+          ))
+        ) : (
+          <View style={styles.emptyCard}>
+            <Ionicons name="stats-chart-outline" size={32} color={Colors.textMuted} style={styles.emptyIcon} />
+            <Text style={styles.emptyTitle}>No active voting rounds.</Text>
+            <Text style={styles.emptySubtitle}>Check back later or start one in your groups.</Text>
+          </View>
+        )}
+      </View>
+
+      <View style={styles.section}>
+        <SectionHeader 
+          title="Recent Friend Activity" 
+          subtitle="See what the people you follow have been up to."
+          icon="pulse-outline" 
+        />
+        {feedLoading ? (
+          <View style={{ gap: 16 }}>
+            <Skeleton width="100%" height={120} style={{ borderRadius: 12 }} />
+            <Skeleton width="100%" height={120} style={{ borderRadius: 12 }} />
+          </View>
+        ) : recentFeed.length > 0 ? (
+          <View style={{ gap: 16 }}>
+            {recentFeed.map((activity: any, index: number) => (
+              <ActivityCard key={activity?.id || `feed-item-${index}`} activity={activity as any} />
+            ))}
+          </View>
+        ) : (
+          <View style={styles.emptyCard}>
+            <Ionicons name="pulse-outline" size={32} color={Colors.textMuted} style={styles.emptyIcon} />
+            <Text style={styles.emptyTitle}>No activity yet.</Text>
+            <Text style={styles.emptySubtitle}>Follow some people to see their updates here.</Text>
+          </View>
+        )}
+      </View>
+
+    </ScrollView>
   );
 }
 
@@ -120,71 +177,131 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.background,
   },
-
-  // ── Header ──────────────────────────────────────────────
-  header: {
-    paddingTop: 16,
-    paddingBottom: 4,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.surfaceBorder,
+  content: {
+    padding: 16,
+    paddingBottom: 40,
   },
-  titleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    marginBottom: 12,
+  hero: {
+    marginBottom: 32,
+    marginTop: 8,
   },
-  titleLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-  },
-  iconContainer: {
-    width: 34,
-    height: 34,
-    borderRadius: 10,
-    backgroundColor: Colors.primaryAlpha10,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: Colors.primaryAlpha20,
-  },
-  title: {
+  heroTitle: {
     fontFamily: FontFamily.bold,
-    fontSize: FontSize['2xl'],
+    fontSize: FontSize['3xl'],
+    color: Colors.textPrimary,
+    marginBottom: 8,
+  },
+  heroSubtitle: {
+    fontFamily: FontFamily.regular,
+    fontSize: FontSize.md,
+    color: Colors.textSecondary,
+    lineHeight: 22,
+  },
+  section: {
+    marginBottom: 32,
+  },
+  sectionHeader: {
+    marginBottom: 16,
+  },
+  sectionTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  sectionIcon: {
+    marginRight: 8,
+  },
+  sectionTitle: {
+    fontFamily: FontFamily.bold,
+    fontSize: FontSize.lg,
     color: Colors.textPrimary,
   },
-
-  // ── Filter chips ─────────────────────────────────────────
-  filterRow: {
-    flexDirection: 'row',
-    gap: 8,
-    paddingHorizontal: 20,
-    paddingBottom: 12,
+  sectionSubtitle: {
+    fontFamily: FontFamily.regular,
+    fontSize: FontSize.sm,
+    color: Colors.textSecondary,
+    marginLeft: 32,
   },
-  filterChip: {
+  horizontalScroll: {
+    paddingVertical: 4,
+  },
+  horizontalCard: {
+    width: 280,
+    marginRight: 12,
+  },
+  voteCard: {
+    backgroundColor: 'rgba(99, 102, 241, 0.05)',
+    borderColor: 'rgba(99, 102, 241, 0.2)',
+    borderWidth: 1,
+    borderRadius: 16,
+    marginBottom: 12,
+    padding: 16,
+  },
+  voteCardContent: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 5,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 20,
-    backgroundColor: Colors.surface,
-    borderWidth: 1,
-    borderColor: Colors.surfaceBorder,
   },
-  filterChipActive: {
-    backgroundColor: Colors.primaryAlpha10,
-    borderColor: Colors.primary,
+  voteIconBg: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: 'rgba(99, 102, 241, 0.1)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 16,
   },
-  filterChipText: {
+  voteCardInfo: {
+    flex: 1,
+  },
+  voteCardTitle: {
+    fontFamily: FontFamily.bold,
+    fontSize: FontSize.base,
+    color: Colors.textPrimary,
+  },
+  voteCardGroup: {
     fontFamily: FontFamily.medium,
     fontSize: FontSize.sm,
-    color: Colors.textMuted,
-  },
-  filterChipTextActive: {
     color: Colors.primary,
-    fontFamily: FontFamily.semiBold,
+    marginTop: 2,
+  },
+  voteBadge: {
+    backgroundColor: Colors.primary,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 12,
+  },
+  voteBadgeText: {
+    color: Colors.textInverse,
+    fontFamily: FontFamily.bold,
+    fontSize: FontSize.xs,
+  },
+  emptyCard: {
+    borderWidth: 1,
+    borderColor: Colors.surfaceBorder,
+    borderStyle: 'dashed',
+    borderRadius: 16,
+    padding: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  emptyIcon: {
+    marginBottom: 12,
+  },
+  emptyTitle: {
+    fontFamily: FontFamily.bold,
+    fontSize: FontSize.base,
+    color: Colors.textPrimary,
+    marginBottom: 4,
+  },
+  emptySubtitle: {
+    fontFamily: FontFamily.regular,
+    fontSize: FontSize.sm,
+    color: Colors.textSecondary,
+    textAlign: 'center',
+  },
+  emptyText: {
+    fontFamily: FontFamily.regular,
+    fontSize: FontSize.sm,
+    color: Colors.textSecondary,
   },
 });

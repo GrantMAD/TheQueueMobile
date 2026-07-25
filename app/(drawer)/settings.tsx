@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, Alert, Platform } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Alert, Platform, Appearance, useColorScheme } from 'react-native';
 import { useAuthStore } from '@/store/authStore';
 import { supabase } from '@/lib/supabase/client';
 import { Colors } from '@/constants/colors';
@@ -19,6 +19,8 @@ export default function SettingsScreen() {
   const [displayName, setDisplayName] = useState('');
   const [isSavingName, setIsSavingName] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+
+  const [themePref, setThemePref] = useState<'light'|'dark'|'system'>('system');
 
   useEffect(() => {
     if (profile?.display_name) {
@@ -144,6 +146,23 @@ export default function SettingsScreen() {
     }
   };
 
+  const handleThemeChange = (theme: 'light' | 'dark' | 'system') => {
+    setThemePref(theme);
+    try {
+      if (theme === 'system') {
+        Appearance.setColorScheme(null as any);
+      } else {
+        Appearance.setColorScheme(theme);
+      }
+    } catch (e) {
+      if (Platform.OS === 'web') {
+        alert('Theme switching via Appearance API is not fully supported on React Native Web.');
+      } else {
+        console.warn('Failed to set color scheme:', e);
+      }
+    }
+  };
+
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <View style={styles.headerTextContainer}>
@@ -218,9 +237,28 @@ export default function SettingsScreen() {
           </View>
         </View>
         
-        <View style={styles.comingSoonBox}>
-          <Ionicons name="phone-portrait-outline" size={32} color={Colors.textMuted} style={styles.comingSoonIcon} />
-          <Text style={styles.comingSoonText}>Theme preferences are currently tied to your device settings.</Text>
+        <View style={styles.themeToggleContainer}>
+          <Button 
+            text="System" 
+            variant={themePref === 'system' ? 'primary' : 'secondary'} 
+            size="sm" 
+            onPress={() => handleThemeChange('system')} 
+            style={styles.themeBtn} 
+          />
+          <Button 
+            text="Light" 
+            variant={themePref === 'light' ? 'primary' : 'secondary'} 
+            size="sm" 
+            onPress={() => handleThemeChange('light')} 
+            style={styles.themeBtn} 
+          />
+          <Button 
+            text="Dark" 
+            variant={themePref === 'dark' ? 'primary' : 'secondary'} 
+            size="sm" 
+            onPress={() => handleThemeChange('dark')} 
+            style={styles.themeBtn} 
+          />
         </View>
       </Card>
 
@@ -345,5 +383,13 @@ const styles = StyleSheet.create({
     color: Colors.textMuted,
     textAlign: 'center',
     marginTop: 4,
+  },
+  themeToggleContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 8,
+  },
+  themeBtn: {
+    flex: 1,
   }
 });
