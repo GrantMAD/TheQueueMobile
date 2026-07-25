@@ -1,5 +1,12 @@
 import React from 'react';
-import { FlatList, StyleSheet, Text, View, ActivityIndicator, RefreshControl } from 'react-native';
+import {
+  FlatList,
+  StyleSheet,
+  Text,
+  View,
+  ActivityIndicator,
+  RefreshControl,
+} from 'react-native';
 import { FeedActivity } from '@/types';
 import { ActivityCard } from './ActivityCard';
 import { Skeleton } from '../ui/Skeleton';
@@ -15,6 +22,35 @@ interface ActivityFeedProps {
   isFetchingNextPage: boolean;
 }
 
+/** Skeleton loader shaped like the new media-forward card */
+function CardSkeleton() {
+  return (
+    <View style={styles.skeletonCard}>
+      {/* Poster placeholder */}
+      <Skeleton width={72} height={108} style={{ borderRadius: 10 }} />
+
+      {/* Content */}
+      <View style={styles.skeletonContent}>
+        {/* User row */}
+        <View style={styles.skeletonUserRow}>
+          <Skeleton width={32} height={32} variant="circle" />
+          <View style={{ gap: 6, flex: 1 }}>
+            <Skeleton width={110} height={12} />
+            <Skeleton width={60} height={10} />
+          </View>
+        </View>
+
+        {/* Activity pill */}
+        <Skeleton width={90} height={20} style={{ borderRadius: 20 }} />
+
+        {/* Title */}
+        <Skeleton width="90%" height={16} />
+        <Skeleton width="60%" height={16} />
+      </View>
+    </View>
+  );
+}
+
 export function ActivityFeed({
   activities,
   isLoading,
@@ -27,17 +63,7 @@ export function ActivityFeed({
     return (
       <View style={styles.skeletonContainer}>
         {[1, 2, 3].map((n) => (
-          <View key={n} style={styles.skeletonCard}>
-            <View style={styles.skeletonHeader}>
-              <Skeleton width={32} height={32} variant="circle" />
-              <View style={styles.skeletonHeaderInfo}>
-                <Skeleton width={120} height={14} />
-                <Skeleton width={60} height={10} style={{ marginTop: 6 }} />
-              </View>
-            </View>
-            <Skeleton width="80%" height={16} />
-            <Skeleton width="100%" height={48} style={{ marginTop: 12 }} />
-          </View>
+          <CardSkeleton key={n} />
         ))}
       </View>
     );
@@ -50,7 +76,13 @@ export function ActivityFeed({
       renderItem={({ item }) => <ActivityCard activity={item} />}
       onRefresh={undefined}
       refreshing={undefined}
-      refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} tintColor={Colors.primary} />}
+      refreshControl={
+        <RefreshControl
+          refreshing={isRefreshing}
+          onRefresh={onRefresh}
+          tintColor={Colors.primary}
+        />
+      }
       removeClippedSubviews={true}
       initialNumToRender={10}
       maxToRenderPerBatch={10}
@@ -64,8 +96,11 @@ export function ActivityFeed({
       }
       ListEmptyComponent={
         <View style={styles.emptyContainer}>
+          <Text style={styles.emptyIcon}>🎬</Text>
           <Text style={styles.emptyText}>Feed is currently quiet.</Text>
-          <Text style={styles.emptySubtext}>Follow your friends to see their activity here!</Text>
+          <Text style={styles.emptySubtext}>
+            Follow your friends to see their activity here!
+          </Text>
         </View>
       }
       contentContainerStyle={styles.listContent}
@@ -74,27 +109,35 @@ export function ActivityFeed({
 }
 
 const styles = StyleSheet.create({
+  // ── Skeleton ────────────────────────────────────────────
   skeletonContainer: {
     padding: 16,
-    gap: 16,
+    gap: 12,
   },
   skeletonCard: {
     backgroundColor: Colors.surface,
-    padding: 16,
     borderRadius: 16,
     borderWidth: 1,
     borderColor: Colors.surfaceBorder,
+    padding: 14,
+    flexDirection: 'row',
+    gap: 14,
   },
-  skeletonHeader: {
+  skeletonContent: {
+    flex: 1,
+    gap: 8,
+    justifyContent: 'flex-start',
+  },
+  skeletonUserRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 12,
+    gap: 8,
+    marginBottom: 2,
   },
-  skeletonHeaderInfo: {
-    marginLeft: 12,
-  },
+
+  // ── Footer / empty ──────────────────────────────────────
   footerLoader: {
-    marginVertical: 16,
+    marginVertical: 20,
   },
   emptyContainer: {
     flex: 1,
@@ -102,6 +145,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingTop: 100,
     paddingHorizontal: 32,
+  },
+  emptyIcon: {
+    fontSize: 40,
+    marginBottom: 12,
   },
   emptyText: {
     fontFamily: FontFamily.bold,
@@ -115,9 +162,12 @@ const styles = StyleSheet.create({
     fontSize: FontSize.sm,
     color: Colors.textSecondary,
     textAlign: 'center',
+    lineHeight: 20,
   },
+
+  // ── List content ────────────────────────────────────────
   listContent: {
     padding: 16,
-    paddingBottom: 32,
+    paddingBottom: 40,
   },
 });

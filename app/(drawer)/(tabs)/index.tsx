@@ -1,13 +1,24 @@
-import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import React, { useState, useMemo } from 'react';
+import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useFeed } from '@/hooks/useFeed';
 import { ActivityFeed } from '@/components/feed/ActivityFeed';
 import { Colors } from '@/constants/colors';
 import { FontFamily, FontSize } from '@/constants/typography';
 import { useRealtime } from '@/hooks/useRealtime';
+import { FeedActivity } from '@/types';
+
+type FilterKey = 'all' | 'reviews' | 'status';
+
+const FILTERS: { key: FilterKey; label: string; icon: keyof typeof Ionicons.glyphMap }[] = [
+  { key: 'all',     label: 'All',            icon: 'apps-outline' },
+  { key: 'reviews', label: 'Reviews',         icon: 'star-outline' },
+  { key: 'status',  label: 'Status Updates',  icon: 'pulse-outline' },
+];
 
 export default function FeedTab() {
+  const [activeFilter, setActiveFilter] = useState<FilterKey>('all');
+
   const {
     data,
     isLoading,
@@ -17,7 +28,7 @@ export default function FeedTab() {
     isFetchingNextPage,
   } = useFeed();
 
-  // Realtime sync for feed changes: invalidates feed query whenever reviews or user_media lists edit
+  // Realtime sync for feed changes
   useRealtime({
     channelName: 'feed-updates-reviews',
     tableName: 'reviews',
@@ -30,19 +41,68 @@ export default function FeedTab() {
     queryKeyToInvalidate: ['friend-feed'],
   });
 
-  const activities = data?.pages.flatMap((page) => page) ?? [];
+  const allActivities: FeedActivity[] = data?.pages.flatMap((page) => page) ?? [];
+
+  const activities = useMemo(() => {
+    if (activeFilter === 'reviews') {
+      return allActivities.filter((a) => a.activity_type === 'review');
+    }
+    if (activeFilter === 'status') {
+      return allActivities.filter((a) => a.activity_type === 'status_update');
+    }
+    return allActivities;
+  }, [allActivities, activeFilter]);
 
   return (
     <View style={styles.container}>
+      {/* ── Header ──────────────────────────────────── */}
       <View style={styles.header}>
         <View style={styles.titleRow}>
-          <Ionicons name="albums-outline" size={28} color={Colors.textPrimary} style={styles.titleIcon} />
-          <Text style={styles.title}>Your Feed</Text>
+          <View style={styles.titleLeft}>
+            <View style={styles.iconContainer}>
+              <Ionicons name="albums" size={18} color={Colors.primary} />
+            </View>
+            <Text style={styles.title}>Your Feed</Text>
+          </View>
         </View>
-        <Text style={styles.description}>
-          See what your friends are watching and reviewing.
-        </Text>
+
+        {/* Filter chips */}
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.filterRow}
+        >
+          {FILTERS.map((f) => {
+            const isActive = activeFilter === f.key;
+            return (
+              <Pressable
+                key={f.key}
+                onPress={() => setActiveFilter(f.key)}
+                style={[
+                  styles.filterChip,
+                  isActive && styles.filterChipActive,
+                ]}
+              >
+                <Ionicons
+                  name={f.icon}
+                  size={13}
+                  color={isActive ? Colors.primary : Colors.textMuted}
+                />
+                <Text
+                  style={[
+                    styles.filterChipText,
+                    isActive && styles.filterChipTextActive,
+                  ]}
+                >
+                  {f.label}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </ScrollView>
       </View>
+
+      {/* ── Feed ────────────────────────────────────── */}
       <ActivityFeed
         activities={activities}
         isLoading={isLoading}
@@ -60,27 +120,71 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.background,
   },
+
+  // ── Header ──────────────────────────────────────────────
   header: {
-    paddingHorizontal: 20,
     paddingTop: 16,
-    paddingBottom: 8,
+    paddingBottom: 4,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.surfaceBorder,
   },
   titleRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 4,
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    marginBottom: 12,
   },
-  titleIcon: {
-    marginRight: 8,
+  titleLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  iconContainer: {
+    width: 34,
+    height: 34,
+    borderRadius: 10,
+    backgroundColor: Colors.primaryAlpha10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: Colors.primaryAlpha20,
   },
   title: {
     fontFamily: FontFamily.bold,
     fontSize: FontSize['2xl'],
     color: Colors.textPrimary,
   },
-  description: {
-    fontFamily: FontFamily.regular,
-    fontSize: FontSize.md,
-    color: Colors.textSecondary,
+
+  // ── Filter chips ─────────────────────────────────────────
+  filterRow: {
+    flexDirection: 'row',
+    gap: 8,
+    paddingHorizontal: 20,
+    paddingBottom: 12,
+  },
+  filterChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    backgroundColor: Colors.surface,
+    borderWidth: 1,
+    borderColor: Colors.surfaceBorder,
+  },
+  filterChipActive: {
+    backgroundColor: Colors.primaryAlpha10,
+    borderColor: Colors.primary,
+  },
+  filterChipText: {
+    fontFamily: FontFamily.medium,
+    fontSize: FontSize.sm,
+    color: Colors.textMuted,
+  },
+  filterChipTextActive: {
+    color: Colors.primary,
+    fontFamily: FontFamily.semiBold,
   },
 });
